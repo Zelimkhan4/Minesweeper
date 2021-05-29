@@ -1,9 +1,11 @@
 import pygame
 import sys
 import random
+import math
 
+sys.setrecursionlimit(2500)
 pygame.init()
-SIZE = WIDTH, HEIGHT = 800, 600
+SIZE = WIDTH, HEIGHT = 40 * 9, 40 * 9
 screen = pygame.display.set_mode(SIZE)
 
 class Board:
@@ -33,7 +35,7 @@ class Board:
         pos_x = x // self.size
         pos_y = y // self.size
 
-        return pos_x, pos_y
+        return pos_y, pos_x
     
 
     def place_mines(self, pos): # Позиция на которую уже нажали(в первый раз)
@@ -43,46 +45,54 @@ class Board:
 
 
     # Открытие ячейки
-    def open_cell(self, pos):
+    def open_cell(self, pos, first=True):
         # Рекурсивный алгоритм для открытия клеток
         # Всего три случая 
         # 1. Под клеткой бомба, вы проигрываете
         # 2. Под клеткой нет бомбы но рядом есть, записывается количество бомб рядом с клетки
         # 3. Под клеткой бомбы нет, и рядом нет, для каждого соседа проверяется верхнее
         
-        # Мина, game_over
-        if pos in self.mines:
-            sys.exit()
-        x, y = pos
+
+        y, x = pos
+        
         # Алгоритм для определения соседей
+        if pos in self.mines:
+            print('boom')
+            if first:
+                sys.exit()
+            else:
+                return
         neighbours = []
         for row in range(y - 1, y + 2):
-            if row < 0:
+            if row < 0 or row >= HEIGHT // self.size:
                 continue
             for col in range(x - 1, x + 2):
-                if col < 0:
+                if col < 0 or col >= WIDTH // self.size:
                     continue
-                elif (col, row) == pos:
-                    continue 
-                neighbours.append((col, row))
+                elif (row, col) == (y, x):
+                    continue
+                if not self.board[row][col]:
+                    neighbours.append((row, col))
 
         count_of_bombs = [i in self.mines for i in neighbours].count(True)
         if count_of_bombs:
             # В матрице сначала строка, затем столбцы
             self.board[y][x] = count_of_bombs
-            print(x, y)
         else:
             self.board[y][x] = -1
-            # for n in neighbours:
-            #     try:
-            #         self.open_cell(n)
-            #     except:
-            #         pass
+            print(neighbours)
+            try:
+                for n in neighbours:
+                    print(n)
+                    self.open_cell(n, first=False)          
+            except:
+                print('Обшибка')
+                return
+
 
 if __name__ == "__main__":
     running = True
     board = Board(40)
-    board.open_cell((0, 0))
     start_game = False
     while running:
         for ev in pygame.event.get():
@@ -93,11 +103,7 @@ if __name__ == "__main__":
                     if not start_game:
                         board.place_mines(ev.pos)
                         start_game = True
-                    x, y = ev.pos
-                    board.open_cell((x // board.size, y // board.size))
+                    board.open_cell(board.find_position(ev.pos))
         screen.fill((0, 0, 0))
         board.draw_board(screen)
-
-        # Some actions
-
         pygame.display.flip()
