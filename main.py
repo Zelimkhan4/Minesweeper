@@ -1,9 +1,12 @@
 import pygame
 import sys
 import random
-import math
+import time
 
-sys.setrecursionlimit(2500)
+from pygame import image
+from utils import load_image
+
+
 pygame.init()
 SIZE = WIDTH, HEIGHT = 40 * 9, 40 * 9
 screen = pygame.display.set_mode(SIZE)
@@ -57,11 +60,9 @@ class Board:
         
         # Алгоритм для определения соседей
         if pos in self.mines:
-            print('boom')
             if first:
                 sys.exit()
-            else:
-                return
+            return
         neighbours = []
         for row in range(y - 1, y + 2):
             if row < 0 or row >= HEIGHT // self.size:
@@ -80,14 +81,8 @@ class Board:
             self.board[y][x] = count_of_bombs
         else:
             self.board[y][x] = -1
-            print(neighbours)
-            try:
-                for n in neighbours:
-                    print(n)
-                    self.open_cell(n, first=False)          
-            except:
-                print('Обшибка')
-                return
+            for n in neighbours:
+                self.open_cell(n, first=False)          
 
 
 if __name__ == "__main__":
